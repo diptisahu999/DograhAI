@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dograh Voice AI Demo</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --primary: #3b82f6;
+      --primary-glow: rgba(59, 130, 246, 0.5);
+      --danger: #ef4444;
+      --danger-glow: rgba(239, 68, 68, 0.5);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --glass-bg: rgba(30, 41, 59, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Animated Background Gradients */
+    .bg-blob {
+      position: absolute;
+      filter: blur(80px);
+      opacity: 0.5;
+      z-index: -1;
+      animation: float 10s infinite ease-in-out alternate;
+    }
+
+    .blob-1 {
+      width: 400px;
+      height: 400px;
+      background: #4f46e5;
+      top: -100px;
+      left: -100px;
+      border-radius: 50%;
+    }
+
+    .blob-2 {
+      width: 500px;
+      height: 500px;
+      background: #0ea5e9;
+      bottom: -200px;
+      right: -100px;
+      border-radius: 50%;
+      animation-delay: -5s;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translate(0, 0) scale(1);
+      }
+
+      100% {
+        transform: translate(30px, 50px) scale(1.1);
+      }
+    }
+
+    /* Glassmorphic Container */
+    .demo-container {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 40px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      transition: transform 0.3s ease;
+    }
+
+    .demo-container:hover {
+      transform: translateY(-5px);
+    }
+
+    /* Typography */
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      background: linear-gradient(to right, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p {
+      font-size: 15px;
+      margin-bottom: 32px;
+      color: var(--text-muted);
+      font-weight: 300;
+    }
+
+    /* AI Visualizer Orb */
+    .orb-container {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 32px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .orb {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      box-shadow: 0 0 20px var(--primary-glow);
+      transition: all 0.5s ease;
+    }
+
+    .orb.idle {
+      animation: breathe 4s infinite ease-in-out;
+    }
+
+    .orb.connecting {
+      background: linear-gradient(135deg, #eab308, #f97316);
+      box-shadow: 0 0 30px rgba(234, 179, 8, 0.5);
+      animation: spin 2s infinite linear;
+    }
+
+    .orb.connected {
+      background: linear-gradient(135deg, #10b981, #3b82f6);
+      box-shadow: 0 0 40px rgba(16, 185, 129, 0.6);
+      animation: pulse-active 1.5s infinite ease-in-out;
+    }
+
+    /* Orb Animations */
+    @keyframes breathe {
+
+      0%,
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 15px var(--primary-glow);
+      }
+
+      50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 25px var(--primary-glow);
+      }
+    }
+
+    @keyframes spin {
+      100% {
+        transform: rotate(360deg) scale(0.9);
+      }
+    }
+
+    @keyframes pulse-active {
+      0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+      }
+
+      50% {
+        transform: scale(1.15);
+        box-shadow: 0 0 50px rgba(16, 185, 129, 0.8);
+      }
+
+      100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+      }
+    }
+
+    /* Status Text */
+    .status-text {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 24px;
+      color: var(--text-muted);
+      transition: color 0.3s ease;
+    }
+
+    /* Action Button */
+    #talk-btn {
+      width: 100%;
+      padding: 16px 24px;
+      font-size: 16px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: linear-gradient(135deg, var(--primary), #2563eb);
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 15px -3px var(--primary-glow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    #talk-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 25px -5px var(--primary-glow);
+      filter: brightness(1.1);
+    }
+
+    #talk-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 5px 10px -2px var(--primary-glow);
+    }
+
+    #talk-btn.btn-danger {
+      background: linear-gradient(135deg, var(--danger), #dc2626);
+      box-shadow: 0 10px 15px -3px var(--danger-glow);
+    }
+
+    #talk-btn.btn-danger:hover {
+      box-shadow: 0 15px 25px -5px var(--danger-glow);
+    }
+
+    #talk-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Mic Icon SVG */
+    .icon-mic {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 480px) {
+      .demo-container {
+        padding: 30px 20px;
+        width: 95%;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      p {
+        font-size: 14px;
+        margin-bottom: 24px;
+      }
+
+      .orb-container {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 24px;
+      }
+
+      .orb {
+        width: 65px;
+        height: 65px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Background Elements -->
+  <div class="bg-blob blob-1"></div>
+  <div class="bg-blob blob-2"></div>
+
+  <div class="demo-container">
+    <h1>Dograh Voice AI</h1>
+    <p>Experience seamless conversational intelligence.</p>
+
+    <div class="orb-container">
+      <div id="ai-orb" class="orb idle"></div>
+    </div>
+
+    <div id="status-display" class="status-text">System Idle</div>
+
+    <button id="talk-btn">
+      <svg class="icon-mic" viewBox="0 0 24 24">
+        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+        <line x1="12" y1="19" x2="12" y2="22"></line>
+      </svg>
+      <span id="btn-text">Talk to Agent</span>
+    </button>
+  </div>
+
+  <!-- Dograh Voice Widget Script -->
+  <script>
+    (function (d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = 'http://localhost:3000/embed/dograh-widget.js?token=emb_xkQwSBV2cKxv3ZZs2hWRyWZVorZu6O9ON1PG62eLAM8&environment=local&apiEndpoint=http://localhost:8000';
+      js.async = true;
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'dograh-widget'));
+  </script>
+
+  <!-- Headless Mode Integration Logic -->
+  <script>
+    let callStatus = 'idle';
+
+    const btn = document.getElementById('talk-btn');
+    const btnText = document.getElementById('btn-text');
+    const orb = document.getElementById('ai-orb');
+    const statusDisplay = document.getElementById('status-display');
+
+    function updateUI() {
+      // Reset classes
+      orb.className = 'orb';
+      btn.className = '';
+      btn.disabled = false;
+
+      switch (callStatus) {
+        case 'connected':
+          orb.classList.add('connected');
+          statusDisplay.textContent = 'Agent is listening...';
+          statusDisplay.style.color = '#10b981';
+          btnText.textContent = 'End Session';
+          btn.classList.add('btn-danger');
+          break;
+        case 'connecting':
+          orb.classList.add('connecting');
+          statusDisplay.textContent = 'Establishing secure link...';
+          statusDisplay.style.color = '#eab308';
+          btnText.textContent = 'Connecting...';
+          btn.disabled = true;
+          break;
+        case 'failed':
+          orb.classList.add('idle');
+          statusDisplay.textContent = 'Connection failed';
+          statusDisplay.style.color = '#ef4444';
+          btnText.textContent = 'Retry Connection';
+          break;
+        default: // idle
+          orb.classList.add('idle');
+          statusDisplay.textContent = 'System Ready';
+          statusDisplay.style.color = '#94a3b8';
+          btnText.textContent = 'Talk to Agent';
+          break;
+      }
+    }
+
+    // Initialize UI
+    updateUI();
+
+    // Wait for the asynchronous widget script to load and initialize
+    window.addEventListener('load', () => {
+      console.log("Window loaded, checking for DograhWidget...");
+      const initInterval = setInterval(() => {
+        if (window.DograhWidget) {
+          console.log("DograhWidget found!");
+          clearInterval(initInterval);
+
+          window.DograhWidget.onStatusChange((status) => {
+            console.log("Widget status changed:", status);
+            callStatus = status;
+            updateUI();
+          });
+
+          window.DograhWidget.onError((err) => {
+            console.error('Dograh error:', err);
+            statusDisplay.textContent = 'Error: ' + err.message;
+            statusDisplay.style.color = '#ef4444';
+          });
+        } else {
+          console.log("Waiting for DograhWidget to be defined...");
+        }
+      }, 500);
+    });
+
+    btn.addEventListener('click', () => {
+      if (!window.DograhWidget) {
+        statusDisplay.textContent = "Widget is still loading...";
+        return;
+      }
+
+      if (callStatus === 'connected' || callStatus === 'connecting') {
+        window.DograhWidget.end();
+      } else {
+        window.DograhWidget.start();
+      }
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,39 @@
+---
+title: "Introduction"
+---
+
+## About Dograh
+
+**Dograh is an open-source alternative to platforms like Vapi and Retell** - Dograh helps you build voice AI agents with an easy drag-and-drop workflow builder. Unlike proprietary solutions like Vapi, Dograh gives you:
+- **100% open source** - no vendor lock-in, full transparency
+- **Self-hostable** - deploy anywhere, own your infrastructure  
+- **Complete control** - every line of code is open and customizable
+- **2-minute setup** - from zero to working voice bot in under 2 minutes
+
+## Overview
+Watch the following video to learn about Dograh’s capabilities.
+
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/sxiSp4JXqws"
+  title="Dograh Overview"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
+
+## Setting up
+
+Get the platform up and running using Docker with a single command on your local computer. If you are looking to deploy the platform on a server different than your local machine, please check the [Deployment](deployment/introduction) section.
+
+<Note>We collect anonymous usage data to improve the product. You can opt out by setting the `ENABLE_TELEMETRY` to `false` in the below command.</Note>
+
+```bash
+curl -o docker-compose.yaml https://raw.githubusercontent.com/dograh-hq/dograh/main/docker-compose.yaml && REGISTRY=ghcr.io/dograh-hq ENABLE_TELEMETRY=true docker compose up --pull always
+```
+
+Please check [Prerequisites](getting-started/prerequisites) for the system requirements and [Troubleshooting](getting-started/troubleshooting) for common issues.
+
+## Next Steps
+
+You can see how to configure the inference provider in [Inference Provider](/configurations/inference-providers).

@@ -1,0 +1,11 @@
+# Root Python requirements for Dograh.
+# Use Python 3.12 or 3.13.
+
+# Backend dependencies
+-r api/requirements.txt
+
+# Local package dependencies for pipecat utilities used by the API
+-e ./pipecat[cartesia,deepgram,openai,elevenlabs,groq,google,azure,sarvam,soundfile,silero,webrtc,speechmatics,openrouter,camb,mcp]
+
+# Dev dependencies are installed separately:
+# pip install -r api/requirements.dev.txt
