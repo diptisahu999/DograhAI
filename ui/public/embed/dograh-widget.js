@@ -197,32 +197,43 @@
       }
 
       .dograh-widget-cta {
-        display: inline-flex;
+        display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 12px 20px;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
         border: none;
-        border-radius: 9999px;
-        color: #ffffff;
-        font-size: 14px;
-        font-weight: 600;
+        border-radius: 16px;
         cursor: pointer;
-        white-space: nowrap;
-        max-width: calc(100vw - 40px);
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         transition: filter 150ms ease, transform 100ms ease, box-shadow 200ms ease;
         animation: dograh-cta-in 220ms ease-out;
       }
+      .dograh-widget-cta svg {
+        width: 28px;
+        height: 28px;
+      }
+      .dograh-widget-cta.dograh-state-idle {
+        background-color: #f4f4f5;
+      }
+      .dograh-widget-cta.dograh-state-idle svg {
+        stroke: #4b5563;
+      }
 
       .dograh-widget-cta:hover {
-        filter: brightness(1.08);
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+        filter: brightness(0.95);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
       }
-      .dograh-widget-cta:active { transform: scale(0.98); }
-
-      .dograh-widget-cta.dograh-state-connecting { background: #f59e0b !important; animation: dograh-pulse 1.6s infinite; }
-      .dograh-widget-cta.dograh-state-connected  { background: #ef4444 !important; }
-      .dograh-widget-cta.dograh-state-failed     { background: #ef4444 !important; opacity: 0.85; }
+      .dograh-widget-cta:active { transform: scale(0.96); }
+      
+      /* Active states */
+      .dograh-widget-cta.dograh-state-connecting { background: #f59e0b; color: #ffffff; animation: dograh-pulse 1.6s infinite; }
+      .dograh-widget-cta.dograh-state-connected  { background: #ef4444; color: #ffffff; }
+      .dograh-widget-cta.dograh-state-failed     { background: #ef4444; color: #ffffff; opacity: 0.85; }
+      
+      .dograh-widget-cta:not(.dograh-state-idle) svg {
+        stroke: #ffffff;
+      }
 
       @keyframes dograh-pulse {
         0%, 100% { opacity: 1; }
@@ -288,20 +299,12 @@
     button.id = 'dograh-widget-cta';
     button.type = 'button';
     button.className = `dograh-widget-cta dograh-state-${status}`;
-    // Idle uses configured color; status states use CSS-defined colors.
-    if (status === 'idle') {
-      button.style.backgroundColor = state.config.buttonColor;
-    }
-    button.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
-        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-        <line x1="12" y1="19" x2="12" y2="23"/>
-        <line x1="8" y1="23" x2="16" y2="23"/>
-      </svg>
-      <span></span>
-    `;
-    button.querySelector('span').textContent = ctaLabelForStatus(status);
+    // The background is now overridden by CSS to match the light gray design.
+    
+    // Get the status icon and ensure it's white to contrast with the colored button
+    let iconSvg = getStatusIcon(status).replace(/stroke="#[0-9a-fA-F]{6}"/g, 'stroke="currentColor"');
+    button.innerHTML = iconSvg;
+    
     button.onclick = toggleCall;
 
     container.appendChild(button);
@@ -543,11 +546,8 @@
    */
   function getStatusIcon(status) {
     const icons = {
-      idle: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
-        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-        <line x1="12" y1="19" x2="12" y2="23"/>
-        <line x1="8" y1="23" x2="16" y2="23"/>
+      idle: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
       </svg>`,
       connecting: `<svg class="dograh-widget-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M12 2v4"/>
