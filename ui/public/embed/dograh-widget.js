@@ -59,6 +59,7 @@
     const token = scriptUrl.searchParams.get('token');
     const apiEndpoint = scriptUrl.searchParams.get('apiEndpoint');
     const environment = scriptUrl.searchParams.get('environment');
+    const modeOverride = scriptUrl.searchParams.get('mode');
 
     if (!token) {
       console.error('Dograh Widget: No token found in script URL');
@@ -112,7 +113,7 @@
       state.config = {
         ...state.config,
         workflowId: configData.workflow_id,
-        embedMode: configData.settings?.embedMode || 'floating',
+        embedMode: modeOverride || configData.settings?.embedMode || 'floating',
         containerId: configData.settings?.containerId || 'dograh-inline-container',
         position: configData.position || DEFAULT_CONFIG.position,
         buttonColor: configData.settings?.buttonColor || '#10b981',
