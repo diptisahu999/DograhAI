@@ -143,7 +143,9 @@ pathspec==1.1.1
 pdfkit==1.0.0
 pgvector==0.4.2
 pillow==12.2.0
+-e git+https://github.com/dograh-hq/pipecat.git@228324a146a6765c6b8d610963bc80d7bc8cb9f7#egg=pipecat_ai
 platformdirs==4.10.0
+pluggy==1.6.0
 posthog==7.11.1
 propcache==0.5.2
 proto-plus==1.28.0
