@@ -73,6 +73,7 @@ class PipecatEngine:
         embeddings_api_key: Optional[str] = None,
         embeddings_model: Optional[str] = None,
         embeddings_base_url: Optional[str] = None,
+        embeddings_provider: Optional[str] = None,
         has_recordings: bool = False,
         context_compaction_enabled: bool = False,
     ):
@@ -122,10 +123,10 @@ class PipecatEngine:
         # Open MCP tool sessions for this call, keyed by tool_uuid
         self._mcp_sessions: Dict[str, McpToolSession] = {}
 
-        # Embeddings configuration (passed from run_pipeline.py)
         self._embeddings_api_key: Optional[str] = embeddings_api_key
         self._embeddings_model: Optional[str] = embeddings_model
         self._embeddings_base_url: Optional[str] = embeddings_base_url
+        self._embeddings_provider: Optional[str] = embeddings_provider
 
         # Audio configuration (set via set_audio_config from _run_pipeline)
         self._audio_config = None
@@ -373,6 +374,7 @@ class PipecatEngine:
                     embeddings_api_key=self._embeddings_api_key,
                     embeddings_model=self._embeddings_model,
                     embeddings_base_url=self._embeddings_base_url,
+                    embeddings_provider=self._embeddings_provider,
                     tracing_context=self._get_otel_context(),
                 )
 

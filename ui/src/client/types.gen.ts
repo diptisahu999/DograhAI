@@ -4595,6 +4595,12 @@ export type WorkflowRunResponseSchema = {
         [key: string]: unknown;
     } | null;
     /**
+     * Usage Info
+     */
+    usage_info?: {
+        [key: string]: unknown;
+    } | null;
+    /**
      * Definition Id
      */
     definition_id: number | null;
