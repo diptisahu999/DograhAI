@@ -611,6 +611,23 @@ def create_llm_service_from_provider(
             settings=OpenAILLMSettings(model=model, temperature=temperature if temperature is not None else 0.1),
             base_url=base_url,
         )
+    elif provider == ServiceProviders.WOOFFER.value:
+        base_url = base_url or "https://llm.wooffer.io/v1"
+        _validate_runtime_service_url(base_url, "base_url")
+        return OpenAILLMService(
+            api_key=api_key,
+            settings=OpenAILLMSettings(model=model, temperature=temperature if temperature is not None else 0.1),
+            base_url=base_url,
+        )
+    elif provider == ServiceProviders.OPENCODE_AI.value:
+        base_url = base_url or "https://opencode.ai/zen/v1"
+        _validate_runtime_service_url(base_url, "base_url")
+        return OpenAILLMService(
+            api_key="none",
+            default_headers={"Authorization": ""},
+            settings=OpenAILLMSettings(model=model, temperature=temperature if temperature is not None else 0.1),
+            base_url=base_url,
+        )
     elif provider == ServiceProviders.MINIMAX.value:
         base_url = base_url or "https://api.minimax.io/v1"
         _validate_runtime_service_url(base_url, "base_url")
@@ -772,6 +789,10 @@ def create_llm_service(user_config):
     elif provider == ServiceProviders.SPEACHES.value:
         kwargs["base_url"] = user_config.llm.base_url
     elif provider == ServiceProviders.CC_580AI.value:
+        kwargs["base_url"] = user_config.llm.base_url
+    elif provider == ServiceProviders.WOOFFER.value:
+        kwargs["base_url"] = user_config.llm.base_url
+    elif provider == ServiceProviders.OPENCODE_AI.value:
         kwargs["base_url"] = user_config.llm.base_url
     elif provider == ServiceProviders.AWS_BEDROCK.value:
         kwargs["aws_access_key"] = user_config.llm.aws_access_key

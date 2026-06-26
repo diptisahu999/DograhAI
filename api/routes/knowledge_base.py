@@ -3,7 +3,9 @@
 import uuid
 from typing import Annotated, Optional
 
+# pyrefly: ignore [missing-import]
 from fastapi import APIRouter, Depends, HTTPException, Query
+# pyrefly: ignore [missing-import]
 from loguru import logger
 
 from api.db import db_client
@@ -369,26 +371,38 @@ async def search_chunks(
 
     try:
         # Import here to avoid circular dependency
-        from api.services.gen_ai import OpenAIEmbeddingService
+        from api.services.gen_ai import OpenAIEmbeddingService, HuggingFaceEmbeddingService
 
         # Try to get user's embeddings configuration
         user_config = await db_client.get_user_configurations(user.id)
         embeddings_api_key = None
         embeddings_model = None
+        embeddings_provider = None
 
         if user_config.embeddings:
             embeddings_api_key = user_config.embeddings.api_key
             embeddings_model = user_config.embeddings.model
+            embeddings_provider = getattr(user_config.embeddings, "provider", None)
 
         # Initialize embedding service with user config or fallback to env
-        embedding_service = OpenAIEmbeddingService(
-            db_client=db_client,
-            api_key=embeddings_api_key,
-            model_id=embeddings_model or "text-embedding-3-small",
-            base_url=getattr(user_config.embeddings, "base_url", None)
-            if user_config.embeddings
-            else None,
-        )
+        if embeddings_provider == "huggingface":
+            embedding_service = HuggingFaceEmbeddingService(
+                db_client=db_client,
+                api_key=embeddings_api_key,
+                model_id=embeddings_model or "sentence-transformers/all-MiniLM-L6-v2",
+                base_url=getattr(user_config.embeddings, "base_url", None)
+                if user_config.embeddings
+                else None,
+            )
+        else:
+            embedding_service = OpenAIEmbeddingService(
+                db_client=db_client,
+                api_key=embeddings_api_key,
+                model_id=embeddings_model or "text-embedding-3-small",
+                base_url=getattr(user_config.embeddings, "base_url", None)
+                if user_config.embeddings
+                else None,
+            )
 
         # Perform search
         results = await embedding_service.search_similar_chunks(

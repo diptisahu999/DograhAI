@@ -59,6 +59,7 @@ class UserConfigurationValidator:
             ServiceProviders.RIME.value: self._check_rime_api_key,
             ServiceProviders.MINIMAX.value: self._check_minimax_api_key,
             ServiceProviders.CC_580AI.value: self._check_cc_580ai_api_key,
+            ServiceProviders.WOOFFER.value: self._check_openai_api_key,
         }
 
     async def validate(
@@ -132,6 +133,10 @@ class UserConfigurationValidator:
                     ]
             except ValueError as e:
                 return [{"model": service_name, "message": str(e)}]
+            return []
+
+        # OpenCode AI doesn't require an API key
+        if provider == ServiceProviders.OPENCODE_AI.value:
             return []
 
         # Vertex Realtime uses service-account credentials (or ADC) instead of api_key
@@ -223,6 +228,8 @@ class UserConfigurationValidator:
         if provider in (
             ServiceProviders.OPENAI.value,
             ServiceProviders.OPENAI_REALTIME.value,
+            ServiceProviders.WOOFFER.value,
+            ServiceProviders.CC_580AI.value,
         ):
             return validator(provider, api_key, service_config)
         return validator(provider, api_key)
@@ -239,15 +246,15 @@ class UserConfigurationValidator:
             client.models.list()
             return True
         except openai.AuthenticationError:
+            provider_display = getattr(service_config, "provider", "OpenAI").capitalize() if service_config else "OpenAI"
             if base_url and "openai.com" not in base_url:
                 raise ValueError(
-                    f"Invalid OpenAI API key. The key was rejected by the API at {base_url}. "
+                    f"Invalid {provider_display} API key. The key was rejected by the API at {base_url}. "
                     "Please check that your API key is correct and has not been revoked."
                 )
             raise ValueError(
-                "Invalid OpenAI API key. The key was rejected by the OpenAI API. "
-                "Please check that your API key is correct and has not been revoked. "
-                "You can verify your keys at https://platform.openai.com/api-keys."
+                f"Invalid {provider_display} API key. The key was rejected by the {provider_display} API. "
+                "Please check that your API key is correct and has not been revoked."
             )
         except openai.APIConnectionError:
             if base_url:

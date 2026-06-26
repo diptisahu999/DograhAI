@@ -12,7 +12,8 @@ from loguru import logger
 
 from api.db import db_client
 from api.db.models import KnowledgeBaseChunkModel
-from api.services.gen_ai import OpenAIEmbeddingService
+from api.services.gen_ai.embedding.huggingface_service import HuggingFaceEmbeddingService
+from api.services.gen_ai.embedding.openai_service import OpenAIEmbeddingService
 from api.services.mps_service_key_client import mps_service_key_client
 from api.services.storage import storage_fs
 
@@ -152,12 +153,14 @@ async def process_knowledge_base_document(
         embeddings_api_key = None
         embeddings_model = None
         embeddings_base_url = None
+        embeddings_provider = None
         if document.created_by:
             user_config = await db_client.get_user_configurations(document.created_by)
             if user_config.embeddings:
                 embeddings_api_key = user_config.embeddings.api_key
                 embeddings_model = user_config.embeddings.model
                 embeddings_base_url = getattr(user_config.embeddings, "base_url", None)
+                embeddings_provider = getattr(user_config.embeddings, "provider", None)
                 logger.info(f"Using user embeddings config: model={embeddings_model}")
 
         if not embeddings_api_key:
@@ -171,12 +174,20 @@ async def process_knowledge_base_document(
             )
             return
 
-        embedding_service = OpenAIEmbeddingService(
-            db_client=db_client,
-            api_key=embeddings_api_key,
-            model_id=embeddings_model or "text-embedding-3-small",
-            base_url=embeddings_base_url,
-        )
+        if embeddings_provider == "huggingface":
+            embedding_service = HuggingFaceEmbeddingService(
+                db_client=db_client,
+                api_key=embeddings_api_key,
+                model_id=embeddings_model or "sentence-transformers/all-MiniLM-L6-v2",
+                base_url=embeddings_base_url,
+            )
+        else:
+            embedding_service = OpenAIEmbeddingService(
+                db_client=db_client,
+                api_key=embeddings_api_key,
+                model_id=embeddings_model or "text-embedding-3-small",
+                base_url=embeddings_base_url,
+            )
 
         mps_chunks = mps_response.get("chunks", [])
         if not mps_chunks:

@@ -13,7 +13,7 @@ from loguru import logger
 from opentelemetry import trace
 
 from api.db import db_client
-from api.services.gen_ai import OpenAIEmbeddingService
+from api.services.gen_ai import OpenAIEmbeddingService, HuggingFaceEmbeddingService
 from api.services.pipecat.tracing_config import ensure_tracing
 
 
@@ -25,6 +25,7 @@ async def retrieve_from_knowledge_base(
     embeddings_api_key: Optional[str] = None,
     embeddings_model: Optional[str] = None,
     embeddings_base_url: Optional[str] = None,
+    embeddings_provider: Optional[str] = None,
     tracing_context=None,
 ) -> Dict[str, Any]:
     """Retrieve relevant information from the knowledge base using vector similarity search.
@@ -68,6 +69,7 @@ async def retrieve_from_knowledge_base(
                 embeddings_api_key,
                 embeddings_model,
                 embeddings_base_url,
+                embeddings_provider,
             )
 
         # Create span with parent context
@@ -105,6 +107,7 @@ async def retrieve_from_knowledge_base(
                         embeddings_api_key,
                         embeddings_model,
                         embeddings_base_url,
+                        embeddings_provider,
                     )
 
                     # Add result metadata to span
@@ -179,6 +182,7 @@ async def retrieve_from_knowledge_base(
                 embeddings_api_key,
                 embeddings_model,
                 embeddings_base_url,
+                embeddings_provider,
             )
     else:
         # Tracing is disabled - perform retrieval without tracing
@@ -200,6 +204,7 @@ async def _perform_retrieval(
     embeddings_api_key: Optional[str] = None,
     embeddings_model: Optional[str] = None,
     embeddings_base_url: Optional[str] = None,
+    embeddings_provider: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Internal function to perform the actual retrieval operation.
 
@@ -240,12 +245,20 @@ async def _perform_retrieval(
                     "Model Configurations > Embedding."
                 )
 
-            embedding_service = OpenAIEmbeddingService(
-                db_client=db_client,
-                api_key=embeddings_api_key,
-                model_id=embeddings_model or "text-embedding-3-small",
-                base_url=embeddings_base_url,
-            )
+            if embeddings_provider == "huggingface":
+                embedding_service = HuggingFaceEmbeddingService(
+                    db_client=db_client,
+                    api_key=embeddings_api_key,
+                    model_id=embeddings_model or "sentence-transformers/all-MiniLM-L6-v2",
+                    base_url=embeddings_base_url,
+                )
+            else:
+                embedding_service = OpenAIEmbeddingService(
+                    db_client=db_client,
+                    api_key=embeddings_api_key,
+                    model_id=embeddings_model or "text-embedding-3-small",
+                    base_url=embeddings_base_url,
+                )
 
             results = await embedding_service.search_similar_chunks(
                 query=query,

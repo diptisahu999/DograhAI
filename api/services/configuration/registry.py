@@ -69,6 +69,9 @@ class ServiceProviders(str, Enum):
     ULTRAVOX_REALTIME = "ultravox_realtime"
     GOOGLE_REALTIME = "google_realtime"
     GOOGLE_VERTEX_REALTIME = "google_vertex_realtime"
+    HUGGINGFACE = "huggingface"
+    WOOFFER = "wooffer"
+    OPENCODE_AI = "opencode_ai"
 
 
 class BaseServiceConfiguration(BaseModel):
@@ -95,6 +98,9 @@ class BaseServiceConfiguration(BaseModel):
         ServiceProviders.GOOGLE_REALTIME,
         ServiceProviders.GOOGLE_VERTEX_REALTIME,
         ServiceProviders.SARVAM,
+        ServiceProviders.HUGGINGFACE,
+        ServiceProviders.WOOFFER,
+        ServiceProviders.OPENCODE_AI,
     ]
     api_key: str | list[str]
 
@@ -245,6 +251,9 @@ SPEACHES_PROVIDER_MODEL_CONFIG = provider_model_config(
     ),
     provider_docs_url="https://github.com/speaches-ai/speaches",
 )
+HUGGINGFACE_PROVIDER_MODEL_CONFIG = provider_model_config("Hugging Face")
+WOOFFER_PROVIDER_MODEL_CONFIG = provider_model_config("Wooffer")
+OPENCODE_AI_PROVIDER_MODEL_CONFIG = provider_model_config("OpenCode AI")
 
 OPENAI_MODELS = [
     "gpt-4.1",
@@ -519,6 +528,46 @@ class CC580AILLMConfiguration(BaseLLMConfiguration):
     )
 
 
+WOOFFER_MODELS = ["kimi-k2.5"]
+
+
+@register_llm
+class WoofferLLMConfiguration(BaseLLMConfiguration):
+    model_config = WOOFFER_PROVIDER_MODEL_CONFIG
+    provider: Literal[ServiceProviders.WOOFFER] = ServiceProviders.WOOFFER
+    model: str = Field(
+        default="kimi-k2.5",
+        description="Wooffer chat model.",
+        json_schema_extra={"examples": WOOFFER_MODELS, "allow_custom_input": True},
+    )
+    base_url: str = Field(
+        default="https://llm.wooffer.io/v1",
+        description="Wooffer API endpoint.",
+    )
+
+
+OPENCODE_AI_MODELS = ["big-pickle"]
+
+
+@register_llm
+class OpenCodeAILLMConfiguration(BaseLLMConfiguration):
+    model_config = OPENCODE_AI_PROVIDER_MODEL_CONFIG
+    provider: Literal[ServiceProviders.OPENCODE_AI] = ServiceProviders.OPENCODE_AI
+    model: str = Field(
+        default="big-pickle",
+        description="OpenCode AI chat model.",
+        json_schema_extra={"examples": OPENCODE_AI_MODELS, "allow_custom_input": True},
+    )
+    base_url: str = Field(
+        default="https://opencode.ai/zen/v1",
+        description="OpenCode AI API endpoint.",
+    )
+    api_key: str | list[str] | None = Field(
+        default=None,
+        description="Not required for OpenCode AI. Leave blank.",
+    )
+
+
 OPENAI_REALTIME_MODELS = ["gpt-realtime-2"]
 OPENAI_REALTIME_VOICES = [
     "alloy",
@@ -710,6 +759,8 @@ LLMConfig = Annotated[
         MiniMaxLLMConfiguration,
         SarvamLLMConfiguration,
         CC580AILLMConfiguration,
+        WoofferLLMConfiguration,
+        OpenCodeAILLMConfiguration,
     ],
     Field(discriminator="provider"),
 ]
@@ -1338,8 +1389,27 @@ class OpenRouterEmbeddingsConfiguration(BaseEmbeddingsConfiguration):
     )
 
 
+HUGGINGFACE_EMBEDDING_MODELS = ["sentence-transformers/all-MiniLM-L6-v2"]
+
+
+@register_embeddings
+class HuggingFaceEmbeddingsConfiguration(BaseEmbeddingsConfiguration):
+    model_config = HUGGINGFACE_PROVIDER_MODEL_CONFIG
+    provider: Literal[ServiceProviders.HUGGINGFACE] = ServiceProviders.HUGGINGFACE
+    model: str = Field(
+        default="sentence-transformers/all-MiniLM-L6-v2",
+        description="Hugging Face embedding model identifier.",
+        json_schema_extra={"examples": HUGGINGFACE_EMBEDDING_MODELS},
+    )
+
+    base_url: str = Field(
+        default="https://api-inference.huggingface.co/pipeline/feature-extraction/",
+        description="Hugging Face Inference API endpoint. Defaults to serverless endpoints.",
+    )
+
+
 EmbeddingsConfig = Annotated[
-    Union[OpenAIEmbeddingsConfiguration, OpenRouterEmbeddingsConfiguration],
+    Union[OpenAIEmbeddingsConfiguration, OpenRouterEmbeddingsConfiguration, HuggingFaceEmbeddingsConfiguration],
     Field(discriminator="provider"),
 ]
 
