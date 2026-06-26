@@ -623,7 +623,8 @@ def create_llm_service_from_provider(
         base_url = base_url or "https://opencode.ai/zen/v1"
         _validate_runtime_service_url(base_url, "base_url")
         return OpenAILLMService(
-            api_key=api_key or "none",
+            api_key="none",
+            default_headers={"Authorization": ""},
             settings=OpenAILLMSettings(model=model, temperature=temperature if temperature is not None else 0.1),
             base_url=base_url,
         )
