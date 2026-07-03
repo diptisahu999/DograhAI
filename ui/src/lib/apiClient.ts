@@ -15,7 +15,7 @@ export const createClientConfig: CreateClientConfig = (config) => {
     } else {
         baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || window.location.origin;
     }
-
+    
     return {
         ...config,
         baseUrl,

@@ -28,6 +28,7 @@ class WorkflowRunMode(Enum):
     WEBRTC = "webrtc"
     SMALLWEBRTC = "smallwebrtc"
     TEXTCHAT = "textchat"
+    EXOTEL = "exotel"
 
     # Historical, not used anymore. Don't
     # use and don't remove
