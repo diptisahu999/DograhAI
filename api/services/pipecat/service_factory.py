@@ -567,6 +567,11 @@ def create_llm_service_from_provider(
             api_key=api_key,
             settings=GoogleLLMSettings(model=model, temperature=0.1),
         )
+    elif provider == ServiceProviders.GEMINI.value:
+        return GoogleLLMService(
+            api_key=api_key,
+            settings=GoogleLLMSettings(model=model, temperature=0.1),
+        )
     elif provider == ServiceProviders.GOOGLE_VERTEX.value:
         return GoogleVertexLLMService(
             credentials=credentials,
@@ -608,7 +613,7 @@ def create_llm_service_from_provider(
         _validate_runtime_service_url(base_url, "base_url")
         return OpenAILLMService(
             api_key=api_key,
-            settings=OpenAILLMSettings(model=model, temperature=temperature if temperature is not None else 0.1),
+            settings=OpenAILLMSettings(model=model, temperature=0.1),
             base_url=base_url,
         )
     elif provider == ServiceProviders.WOOFFER.value:
@@ -616,7 +621,7 @@ def create_llm_service_from_provider(
         _validate_runtime_service_url(base_url, "base_url")
         return OpenAILLMService(
             api_key=api_key,
-            settings=OpenAILLMSettings(model=model, temperature=temperature if temperature is not None else 0.1),
+            settings=OpenAILLMSettings(model=model, temperature=0.1),
             base_url=base_url,
         )
     elif provider == ServiceProviders.OPENCODE_AI.value:
@@ -625,7 +630,7 @@ def create_llm_service_from_provider(
         return OpenAILLMService(
             api_key="none",
             default_headers={"Authorization": ""},
-            settings=OpenAILLMSettings(model=model, temperature=temperature if temperature is not None else 0.1),
+            settings=OpenAILLMSettings(model=model, temperature=0.1),
             base_url=base_url,
         )
     elif provider == ServiceProviders.MINIMAX.value:
@@ -636,7 +641,7 @@ def create_llm_service_from_provider(
             base_url=base_url,
             settings=MiniMaxLLMService.Settings(
                 model=model,
-                temperature=temperature if temperature is not None else 1.0,
+                temperature=1.0,
             ),
         )
     elif provider == ServiceProviders.SARVAM.value:
@@ -644,7 +649,7 @@ def create_llm_service_from_provider(
             api_key=api_key,
             settings=SarvamLLMSettings(
                 model=model,
-                temperature=temperature if temperature is not None else 0.5,
+                temperature=0.5,
             ),
         )
     else:
@@ -780,6 +785,8 @@ def create_llm_service(user_config):
     api_key = user_config.llm.api_key
 
     kwargs = {}
+    if hasattr(user_config.llm, 'temperature'):
+        kwargs['temperature'] = user_config.llm.temperature
     if provider == ServiceProviders.OPENAI.value:
         kwargs["base_url"] = user_config.llm.base_url
     elif provider == ServiceProviders.OPENROUTER.value:
