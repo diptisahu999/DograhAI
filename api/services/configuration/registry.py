@@ -51,6 +51,7 @@ class ServiceProviders(str, Enum):
     # NEUPHONIC = "neuphonic"
     ELEVENLABS = "elevenlabs"
     GOOGLE = "google"
+    GEMINI = "gemini"
     AZURE = "azure"
     DOGRAH = "dograh"
     SARVAM = "sarvam"
@@ -101,6 +102,7 @@ class BaseServiceConfiguration(BaseModel):
         ServiceProviders.HUGGINGFACE,
         ServiceProviders.WOOFFER,
         ServiceProviders.OPENCODE_AI,
+        ServiceProviders.GEMINI,
     ]
     api_key: str | list[str]
 
@@ -218,6 +220,7 @@ def provider_model_config(
 
 # Suggested models for each provider (used for UI dropdown)
 OPENAI_PROVIDER_MODEL_CONFIG = provider_model_config("OpenAI")
+GEMINI_PROVIDER_MODEL_CONFIG = provider_model_config("Gemini")
 GOOGLE_PROVIDER_MODEL_CONFIG = provider_model_config("Google")
 GROQ_PROVIDER_MODEL_CONFIG = provider_model_config("Groq")
 OPENROUTER_PROVIDER_MODEL_CONFIG = provider_model_config("Open Router")
@@ -320,6 +323,26 @@ class GoogleLLMService(BaseLLMConfiguration):
         description="Gemini model on Google AI Studio (not Vertex).",
         json_schema_extra={"examples": GOOGLE_MODELS, "allow_custom_input": True},
     )
+
+
+GEMINI_MODELS = [
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+    "gemini-2.0-flash",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+]
+
+@register_llm
+class GeminiLLMService(BaseLLMConfiguration):
+    model_config = GEMINI_PROVIDER_MODEL_CONFIG
+    provider: Literal[ServiceProviders.GEMINI] = ServiceProviders.GEMINI
+    model: str = Field(
+        default="gemini-2.5-flash",
+        description="Gemini chat model via Google AI Studio.",
+        json_schema_extra={"examples": GEMINI_MODELS, "allow_custom_input": True},
+    )
+
 
 
 @register_llm
@@ -761,6 +784,7 @@ LLMConfig = Annotated[
         CC580AILLMConfiguration,
         WoofferLLMConfiguration,
         OpenCodeAILLMConfiguration,
+        GeminiLLMService,
     ],
     Field(discriminator="provider"),
 ]
