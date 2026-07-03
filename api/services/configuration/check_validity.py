@@ -40,6 +40,7 @@ class UserConfigurationValidator:
             ServiceProviders.OPENROUTER.value: self._check_openrouter_api_key,
             ServiceProviders.ELEVENLABS.value: self._validate_elevenlabs_api_key,
             ServiceProviders.GOOGLE.value: self._check_google_api_key,
+            ServiceProviders.GEMINI.value: self._check_google_api_key,
             ServiceProviders.AZURE.value: self._check_azure_api_key,
             ServiceProviders.CARTESIA.value: self._check_cartesia_api_key,
             ServiceProviders.DOGRAH.value: self._check_dograh_api_key,
