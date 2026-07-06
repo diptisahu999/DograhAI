@@ -191,12 +191,39 @@ async def execute_http_tool(
     definition = tool.definition or {}
     config = definition.get("config", {})
 
-    # Get HTTP method and URL
-    method = config.get("method", "POST").upper()
-    url = config.get("url", "")
+    # Prepare render context for templates in headers and URLs
+    initial_context = dict(call_context_vars or {})
+    render_context: Dict[str, Any] = {
+        **initial_context,
+        "initial_context": initial_context,
+        "gathered_context": dict(gathered_context_vars or {}),
+    }
 
-    # Get headers from config
-    headers = dict(config.get("headers", {}) or {})
+    # Get HTTP method and render URL
+    method = config.get("method", "POST").upper()
+    url = render_template(config.get("url", ""), render_context)
+
+    # Get and render headers from config
+    raw_headers = dict(config.get("headers", {}) or {})
+    headers = {}
+    for k, v in raw_headers.items():
+        if isinstance(v, str):
+            val = render_template(v, render_context)
+            if val:
+                # HTTP headers cannot contain newlines and should be stripped of trailing spaces
+                headers[k] = val.replace('\n', ' ').replace('\r', '').strip()
+            else:
+                headers[k] = ""
+        else:
+            headers[k] = str(v).strip()
+
+    # --- AUTO-INJECT DYNAMIC TOKEN FROM FRONTEND WIDGET ---
+    if call_context_vars and "erp_api_token" in call_context_vars:
+        token = call_context_vars["erp_api_token"]
+        if token:
+            # If the user already provided an Authorization header, this will overwrite/append
+            headers["Authorization"] = f"Bearer {token}"
+            logger.info("Auto-injected erp_api_token from context into Custom Tool headers")
 
     # Add auth header if credential is configured
     credential_uuid = config.get("credential_uuid")

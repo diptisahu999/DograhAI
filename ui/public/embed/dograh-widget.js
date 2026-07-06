@@ -609,9 +609,25 @@
   }
 
   /**
+   * Set or update context variables
+   */
+  function setContextVariables(variables) {
+    if (!state.config) {
+      state.config = {};
+    }
+    state.config.contextVariables = {
+      ...(state.config.contextVariables || {}),
+      ...variables
+    };
+  }
+
+  /**
    * Start voice call
    */
-  async function startCall() {
+  async function startCall(contextVariables) {
+    if (contextVariables && typeof contextVariables === 'object') {
+      setContextVariables(contextVariables);
+    }
     updateStatus('connecting', 'Connecting...', 'Please wait while we establish the connection');
 
     if (state.callbacks.onCallStart) {
@@ -981,6 +997,7 @@
   window.DograhWidget = {
     // Core methods
     init: init,
+    setContextVariables: setContextVariables,
     start: startCall,
     stop: stopCall,
     end: stopCall, // Alias for stop

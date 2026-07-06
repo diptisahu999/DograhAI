@@ -16,6 +16,18 @@ from fastapi import (
 )
 from loguru import logger 
 from pydantic import BaseModel
+from api.services.workflow.text_chat_session_service import (
+    default_text_chat_session_data,
+    default_text_chat_checkpoint,
+    initialize_text_chat_session,
+    append_text_chat_user_message,
+    execute_pending_text_chat_turn,
+    TextChatSessionRevisionConflictError,
+    TextChatPendingTurnLostError,
+    TextChatSessionExecutionError,
+)
+from api.routes.workflow_text_chat import _build_response, AppendTextChatMessageRequest
+
 
 from api.db import db_client
 from api.enums import WorkflowRunMode
@@ -33,6 +45,7 @@ class InitEmbedRequest(BaseModel):
 
     token: str
     context_variables: Optional[dict] = None
+    service_mode: Optional[str] = None
 
 
 class InitEmbedResponse(BaseModel):
@@ -160,13 +173,28 @@ async def initialize_embed_session(request: Request, init_request: InitEmbedRequ
 
     # Create workflow run
     try:
+        run_mode = WorkflowRunMode.TEXTCHAT.value if init_request.service_mode == "text" else WorkflowRunMode.SMALLWEBRTC.value
         workflow_run = await db_client.create_workflow_run(
             name=f"Embed Run - {datetime.now(UTC).isoformat()}",
             workflow_id=embed_token.workflow_id,
-            mode=WorkflowRunMode.SMALLWEBRTC.value,
+            mode=run_mode,
             user_id=embed_token.created_by,  # Use token creator as run owner
             initial_context=init_request.context_variables,
         )
+        
+        if init_request.service_mode in ["text", "both"]:
+            text_session = await db_client.ensure_workflow_run_text_session(
+                workflow_run.id,
+                session_data=default_text_chat_session_data(),
+                checkpoint=default_text_chat_checkpoint(),
+            )
+            from pipecat.utils.run_context import set_current_run_id
+            set_current_run_id(workflow_run.id)
+            await initialize_text_chat_session(
+                run_id=workflow_run.id,
+                text_session=text_session,
+            )
+            
     except Exception as e:
         logger.error(f"Failed to create workflow run: {e}")
         raise HTTPException(status_code=500, detail="Failed to create workflow run")
@@ -376,3 +404,72 @@ async def options_config(request: Request, token: str):
             "Access-Control-Max-Age": "86400",
         }
     )
+
+
+async def _get_embed_text_session(session_token: str):
+    embed_session = await db_client.get_embed_session_by_token(session_token)
+    if not embed_session:
+        raise HTTPException(status_code=404, detail="Invalid session token")
+    if embed_session.expires_at and embed_session.expires_at < datetime.now(UTC):
+        raise HTTPException(status_code=403, detail="Session expired")
+        
+    text_session = await db_client.get_workflow_run_text_session(embed_session.workflow_run_id)
+    if not text_session:
+        raise HTTPException(status_code=404, detail="Text chat session not found")
+    return text_session
+
+@router.get("/text-chat/{session_token}")
+async def get_public_text_chat_session(session_token: str):
+    text_session = await _get_embed_text_session(session_token)
+    return _build_response(text_session)
+
+@router.post("/text-chat/{session_token}/messages")
+async def append_public_text_chat_message(session_token: str, request: AppendTextChatMessageRequest):
+    text_session = await _get_embed_text_session(session_token)
+    
+    from pipecat.utils.run_context import set_current_run_id
+    set_current_run_id(text_session.workflow_run.id)
+    
+    try:
+        text_session = await append_text_chat_user_message(
+            run_id=text_session.workflow_run.id,
+            text_session=text_session,
+            user_text=request.text,
+            expected_revision=request.expected_revision,
+        )
+        updated_text_session = await execute_pending_text_chat_turn(
+            workflow_id=text_session.workflow_run.workflow_id,
+            run_id=text_session.workflow_run.id,
+            text_session=text_session,
+        )
+    except TextChatSessionRevisionConflictError as e:
+        raise HTTPException(status_code=409, detail={"message": "Conflict"})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return _build_response(updated_text_session)
+
+@router.options("/text-chat/{session_token}/messages")
+async def options_text_chat_messages(request: Request, session_token: str):
+    origin = request.headers.get("origin", "*")
+    return Response(
+        headers={
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Origin",
+            "Access-Control-Max-Age": "86400",
+        }
+    )
+
+@router.options("/text-chat/{session_token}")
+async def options_text_chat(request: Request, session_token: str):
+    origin = request.headers.get("origin", "*")
+    return Response(
+        headers={
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Origin",
+            "Access-Control-Max-Age": "86400",
+        }
+    )
+
