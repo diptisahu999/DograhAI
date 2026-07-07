@@ -413,7 +413,14 @@ async def _get_embed_text_session(session_token: str):
     if embed_session.expires_at and embed_session.expires_at < datetime.now(UTC):
         raise HTTPException(status_code=403, detail="Session expired")
         
-    text_session = await db_client.get_workflow_run_text_session(embed_session.workflow_run_id)
+    embed_token = await db_client.get_embed_token_by_id(embed_session.embed_token_id)
+    if not embed_token:
+        raise HTTPException(status_code=404, detail="Embed token not found")
+
+    text_session = await db_client.get_workflow_run_text_session(
+        embed_session.workflow_run_id,
+        organization_id=embed_token.organization_id,
+    )
     if not text_session:
         raise HTTPException(status_code=404, detail="Text chat session not found")
     return text_session
