@@ -4,7 +4,7 @@
  * Version: 1.0.0
  */
 
-(function() {
+(function () {
   'use strict';
 
   // Widget configuration defaults
@@ -255,9 +255,9 @@
   function ctaLabelForStatus(status) {
     switch (status) {
       case 'connecting': return 'Connecting…';
-      case 'connected':  return 'End Call';
-      case 'failed':     return 'Retry';
-      default:           return state.config.buttonText || 'Talk to Agent';
+      case 'connected': return 'End Call';
+      case 'failed': return 'Retry';
+      default: return state.config.buttonText || 'Talk to Agent';
     }
   }
 
@@ -300,11 +300,11 @@
     button.type = 'button';
     button.className = `dograh-widget-cta dograh-state-${status}`;
     // The background is now overridden by CSS to match the light gray design.
-    
+
     // Get the status icon and ensure it's white to contrast with the colored button
     let iconSvg = getStatusIcon(status).replace(/stroke="#[0-9a-fA-F]{6}"/g, 'stroke="currentColor"');
     button.innerHTML = iconSvg;
-    
+
     button.onclick = toggleCall;
 
     container.appendChild(button);
