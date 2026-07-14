@@ -218,12 +218,13 @@ async def execute_http_tool(
             headers[k] = str(v).strip()
 
     # --- AUTO-INJECT DYNAMIC TOKEN FROM FRONTEND WIDGET ---
-    if call_context_vars and "erp_api_token" in call_context_vars:
-        token = call_context_vars["erp_api_token"]
-        if token:
-            # If the user already provided an Authorization header, this will overwrite/append
-            headers["Authorization"] = f"Bearer {token}"
-            logger.info("Auto-injected erp_api_token from context into Custom Tool headers")
+    token = None
+    if call_context_vars:
+        token = call_context_vars.get("erp_api_token") or call_context_vars.get("api_key")
+    if token:
+        # If the user already provided an Authorization header, this will overwrite/append
+        headers["Authorization"] = f"Bearer {token}"
+        logger.info("Auto-injected API token from context into Custom Tool headers")
 
     # Add auth header if credential is configured
     credential_uuid = config.get("credential_uuid")
