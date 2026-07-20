@@ -2,6 +2,7 @@ import asyncio
 
 from loguru import logger
 
+from api.constants import ENABLE_VOICE_RECORDING
 from api.db import db_client
 from api.enums import PostHogEvent, WorkflowRunState
 from api.services.campaign.circuit_breaker import circuit_breaker
@@ -401,6 +402,8 @@ def register_audio_data_handler(
 
     @audio_buffer.event_handler("on_audio_data")
     async def on_audio_data(buffer, audio, sample_rate, num_channels):
+        if not ENABLE_VOICE_RECORDING:
+            return
         if not audio:
             return
 

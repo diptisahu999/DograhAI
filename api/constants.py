@@ -44,6 +44,7 @@ MPS_API_URL = os.getenv("MPS_API_URL", "https://services.dograh.com")
 
 # Storage Configuration
 ENABLE_AWS_S3 = os.getenv("ENABLE_AWS_S3", "false").lower() == "true"
+ENABLE_VOICE_RECORDING = os.getenv("ENABLE_VOICE_RECORDING", "true").lower() == "true"
 
 # MinIO Configuration
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "localhost:9000")
